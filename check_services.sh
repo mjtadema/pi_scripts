@@ -4,17 +4,15 @@
 ##	Written by Matthijs Tadema    ##
 ########################################
 	
-ver="0.1.0"
+ver="0.1.1"
 
-set -e
+set -eu
 
 # TODO: parse arguments
 # make sending mail optional
 # make service info optional
 o_sendmail=1
 o_details=0
-
-addr="M.J.Tadema@protonmail.com"
 
 # Function to handle failing properly
 
@@ -27,6 +25,9 @@ function fail()
 	exit 1
 }
 
+# Get address from command line
+addr=$1
+
 # Check if user is root
 if [[ $EUID -ne 0 ]]
 then
@@ -34,15 +35,7 @@ then
 fi
 
 # For service in list
-services=(
-	"syncthing@matthijs.service"
-	"lighttpd.service"
-	"sshd.service"
-	"httpd.service"
-	"pihole-FTL.service"
-	"postgresql.service"
-	"openvpn-server@server.service"
-)
+services=($(cat services))
 
 notrunning=()
 for s in ${services[@]}
@@ -62,10 +55,10 @@ function report()
 	reporttext="$reporttext $toadd \n"
 }
 
-# Small function to send mails to M.J.Tadema@protonmail.com
+# Small function to send mails
 function mailtext()
 {
-	subj="Report from $0 \@ raspberry pi"
+	subj="Report from $0 at $HOSTNAME"
 	msg="$1"
 	mail -s "$subj" "$addr" <<< "$(echo -e "$msg" | sed 's/\n/\r/g')"
 	return $?
